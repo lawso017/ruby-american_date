@@ -3,6 +3,16 @@ require 'time'
 require 'minitest/autorun'
 
 describe "Date.parse" do
+  specify "can be disabled" do
+    Date.american_date_disable
+    Date.american_date_disabled?.must_equal true
+    Date.parse('01/02/2003', true).must_equal Date.new(2003, 2, 1)
+
+    Date.american_date_enable
+    Date.american_date_disabled?.must_equal false
+    Date.parse('01/02/2003', true).must_equal Date.new(2003, 1, 2)
+  end
+
   specify "should use american date format for dd/mm/yy" do
     Date.parse('01/02/03', true).must_equal Date.new(2003, 1, 2)
     Date.parse('01/02/03', true, Date::ITALY).must_equal Date.new(2003, 1, 2)

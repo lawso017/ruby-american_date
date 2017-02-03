@@ -9,6 +9,18 @@ if RUBY_VERSION >= '1.9'
     # so by using eval, we prevent an error when this file is first parsed
     # since the regexp itself will only be parsed at runtime if the RUBY_VERSION condition is met.
 
+    def american_date_disable
+      Thread.current[:american_date_disable] = true
+    end
+
+    def american_date_enable
+      Thread.current[:american_date_disable] = nil
+    end
+
+    def american_date_disabled?
+      Thread.current[:american_date_disable] == true
+    end
+
     # Alias for stdlib Date._parse
     alias _parse_without_american_date _parse
 
@@ -31,18 +43,22 @@ if RUBY_VERSION >= '1.9'
 
     # Transform american date fromat into ISO format.
     def convert_american_to_iso(string)
-      unless string.is_a?(String)
-        if string.respond_to?(:to_str)
-          str = string.to_str
-          unless str.is_a?(String)
+      if Date.american_date_disabled?
+        string
+      else
+        unless string.is_a?(String)
+          if string.respond_to?(:to_str)
+            str = string.to_str
+            unless str.is_a?(String)
+              raise TypeError, "no implicit conversion of #{string.inspect} into String"
+            end
+            string = str
+          else
             raise TypeError, "no implicit conversion of #{string.inspect} into String"
           end
-          string = str
-        else
-          raise TypeError, "no implicit conversion of #{string.inspect} into String"
         end
+        string.sub(AMERICAN_DATE_RE){|m| "#$3-#$1-#$2"}
       end
-      string.sub(AMERICAN_DATE_RE){|m| "#$3-#$1-#$2"}
     end
   end
 
